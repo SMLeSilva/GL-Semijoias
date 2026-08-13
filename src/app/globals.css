@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #FAF9F6;
+    --text-main: #121212;
+    --text-muted: #666666;
+    --gold-accent: #D4AF37;
+    --gold-hover: #B8962E;
+    --gold-light: #FBF8EE;
+    --gold-border: #E6C875;
+    --border-color: #EEEEEE;
+  }
+
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-main);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, .font-serif-luxury {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+}
+
+/* Efeito dourado brilhante */
+.bg-gold-gradient {
+  background: linear-gradient(135deg, #D4AF37 0%, #E5C158 50%, #C5A059 100%);
+}
+
+.bg-gold-gradient:hover {
+  background: linear-gradient(135deg, #C5A059 0%, #D4AF37 50%, #B8962E 100%);
+}
+
+.text-gold-gradient {
+  background: linear-gradient(135deg, #B8962E 0%, #D4AF37 50%, #9A7B20 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.border-gold-glow {
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+}
+
+.gold-badge {
+  background-color: rgba(212, 175, 55, 0.1);
+  color: #B8962E;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+/* Transições suaves e animações */
+.transition-luxury {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.image-zoom-container {
+  overflow: hidden;
+}
+
+.image-zoom-container img {
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.image-zoom-container:hover img {
+  transform: scale(1.05);
+}
+
+/* Estilo para Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F8F9FA;
+}
+::-webkit-scrollbar-thumb {
+  background: #D4AF37;
+  border-radius: 4px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.35s ease-out forwards;
+}

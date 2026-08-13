@@ -1,0 +1,74 @@
+import { Category } from '@/types/catalog';
+
+export const categories: Category[] = [
+  {
+    id: 'brincos',
+    slug: 'brincos',
+    name: 'Brincos',
+    shortDescription: 'Modelos exclusivos e sofisticados para valorizar o seu estilo.',
+    description: 'Explore nossa coleção exclusiva de brincos banhados a ouro e prata',
+    coverImage: 'https://images.unsplash.com/photo-1630019852942-f89202989a59?q=80&w=1000&auto=format&fit=crop',
+    badgeText: 'Coleção Exclusiva',
+    seoTitle: 'Catálogo de Brincos Banhados a Ouro 18k e Ródio | Semijoias Finas',
+    seoDescription: 'Confira nossa selection de brincos de luxo com banho refinado, pedras selecionadas e acabamento impecável.',
+  },
+  {
+    id: 'colares',
+    slug: 'colares',
+    name: 'Colares',
+    shortDescription: 'Peças versáteis e delicadas para enriquecer o seu visual.',
+    description: 'Descubra a elegância atemporal dos nossos colares. Peças versáteis ideais para composições em camadas.',
+    coverImage: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=1000&auto=format&fit=crop',
+    badgeText: 'Mais Vendidos',
+    seoTitle: 'Catálogo de Colares & Chokers Premium | Semijoias Banhadas',
+    seoDescription: 'Colares femininos banhados a ouro 18k com zircônias e pérolas. Peças refinadas para valorizar seu estilo.',
+  },
+  {
+    id: 'pulseiras',
+    slug: 'pulseiras',
+    name: 'Pulseiras',
+    shortDescription: 'Design elegante e moderno para complementar qualquer look.',
+    description: 'Nossa linha de pulseiras combina charme e resistência.',
+    coverImage: 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?q=80&w=1000&auto=format&fit=crop',
+    badgeText: 'Tendência 2026',
+    seoTitle: 'Catálogo de Pulseiras & Braceletes de Luxo | Semijoias',
+    seoDescription: 'Pulseiras finas e braceletes femininos banhados a ouro e ródio. Design moderno e garantia de qualidade.',
+  },
+  {
+    id: 'aneis',
+    slug: 'aneis',
+    name: 'Anéis',
+    shortDescription: 'Modelos clássicos e contemporâneos com acabamento refinado.',
+    description: 'Do clássico ao contemporâneo, nossos anéis trazem lapidação impecável e encaixe perfeito.',
+    coverImage: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?q=80&w=1000&auto=format&fit=crop',
+    badgeText: 'Design Autoral',
+    seoTitle: 'Catálogo de Anéis Femininos Banhados a Ouro | Semijoias',
+    seoDescription: 'Anéis solitários, aparadores e aneis cravejados com zircônia premium. Brilho incomparável e durabilidade.',
+  },
+  {
+    id: 'tornozeleiras',
+    slug: 'tornozeleiras',
+    name: 'Tornozeleiras',
+    shortDescription: 'Peças delicadas e leves para dar um toque extra de charme.',
+    description: 'Leveza e sofisticação para seus pés.',
+    coverImage: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=1000&auto=format&fit=crop',
+    badgeText: 'Verão & Sofisticação',
+    seoTitle: 'Catálogo de Tornozeleiras Delicadas Banhadas | Semijoias',
+    seoDescription: 'Tornozeleiras femininas banhadas a ouro 18k. Modelos com miçangas sutis, correntes venezianas e zircônias.',
+  },
+  {
+    id: 'conjuntos',
+    slug: 'conjuntos',
+    name: 'Conjuntos',
+    shortDescription: 'Kits perfeitamente combinados para um visual prático e harmônico.',
+    description: 'Conjuntos prontos que harmonizam brilho e sofisticação sem esforço. Excelente escolha para presentear ou destacar a elegância feminina.',
+    coverImage: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1000&auto=format&fit=crop',
+    badgeText: 'Ideal para Presente',
+    seoTitle: 'Conjuntos de Semijoias Banhadas a Ouro | Kits Colar e Brinco',
+    seoDescription: 'Conjuntos sofisticados de semijoias finas. Brinco e colar combinando com apresentação luxuosa.',
+  },
+];
+
+export function getCategoryBySlug(slug: string): Category | undefined {
+  return categories.find((cat) => cat.slug === slug);
+}
