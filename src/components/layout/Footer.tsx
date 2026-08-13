@@ -73,9 +73,7 @@ export const Footer: React.FC = () => {
                   className="h-16 sm:h-24 w-auto object-contain brightness-0 invert"
                 />
               </Link>
-              <p className="text-neutral-400 text-sm leading-relaxed">
-                Semijoias exclusivas banhadas a ouro 18k e ródio branco. Peças criadas com acabamento de alta joalheria e brilho intenso.
-              </p>
+
               <div className="pt-2 flex items-center gap-3">
                 <a
                   href={`https://instagram.com/${brandConfig.instagram.replace('@', '')}`}
