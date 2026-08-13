@@ -29,8 +29,6 @@ import {
   Boxes,
   CheckCircle2,
   Table,
-  Download,
-  Upload,
   Calculator,
 } from 'lucide-react';
 
@@ -114,7 +112,7 @@ export default function AdminPage() {
       });
       return updated;
     });
-    showToast('Alteração salva no Excel ✓');
+    showToast('Alteração salva ✓');
   };
 
   const handleAddQuickRow = () => {
@@ -319,50 +317,23 @@ export default function AdminPage() {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
         <div>
           <h1 className="font-serif text-2xl sm:text-3xl font-bold text-white tracking-wide flex items-center gap-2">
-            Painel de Estoque & Planilha Excel
-            <Table className="w-6 h-6 text-[#D4AF37]" />
+            Painel de Controle de Estoque & Vendas
+            <Sparkles className="w-6 h-6 text-[#D4AF37]" />
           </h1>
           <p className="text-xs sm:text-sm text-neutral-400 mt-1">
-            Edite preços, estoques e descrições <strong>diretamente nos campos da tabela</strong> como no Excel.
+            Gestão simplificada de modelos, edição rápida de valores e saldo de estoque
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Botão Exportar Excel */}
-          <button
-            onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-neutral-200 font-medium text-xs transition-colors"
-            title="Baixar planilha compatível com Microsoft Excel"
-          >
-            <Download className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Exportar Excel</span>
-          </button>
-
-          {/* Botão Importar Excel */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleImportCSV}
-            accept=".csv"
-            className="hidden"
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-neutral-200 font-medium text-xs transition-colors"
-            title="Importar catálogo a partir de arquivo CSV/Excel"
-          >
-            <Upload className="w-3.5 h-3.5 text-sky-400" />
-            <span>Importar CSV</span>
-          </button>
-
-          {/* Botão Adicionar Linha Direta na Planilha */}
+          {/* Botão Adicionar Modelo */}
           <button
             onClick={handleAddQuickRow}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-bold text-xs transition-all shadow-md active:scale-95"
-            title="Inserir nova linha editável na planilha"
+            title="Inserir novo modelo na tabela"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Linha Rápida</span>
+            <span>+ Adicionar Modelo</span>
           </button>
 
           {/* Atualizar / Recarregar */}
@@ -438,22 +409,6 @@ export default function AdminPage() {
             </p>
           </div>
         </div>
-      </div>
-
-      {/* Banner Informativo sobre a Edição Direta Excel */}
-      <div className="bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-2xl p-3.5 px-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-3 text-[#D4AF37]">
-          <Table className="w-5 h-5 shrink-0" />
-          <span>
-            <strong>Modo Planilha Excel Ativo:</strong> Clique e digite em qualquer célula (Nome, Categoria, Estoque, Preço, Lucro e Notas) para alterar na hora. Use <kbd className="bg-neutral-800 text-neutral-200 px-1.5 py-0.5 rounded font-mono text-[10px] border border-neutral-700">Tab</kbd> para ir para o próximo campo ou <kbd className="bg-neutral-800 text-neutral-200 px-1.5 py-0.5 rounded font-mono text-[10px] border border-neutral-700">Enter</kbd> para confirmar.
-          </span>
-        </div>
-        <button
-          onClick={handleOpenNewItem}
-          className="shrink-0 text-[11px] text-neutral-400 hover:text-white underline underline-offset-4"
-        >
-          Ou abrir formulário completo
-        </button>
       </div>
 
       {/* Busca e Filtros */}
@@ -688,7 +643,7 @@ export default function AdminPage() {
             className="flex items-center gap-2 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-neutral-900 border border-dashed border-emerald-500/30"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Adicionar Nova Linha na Planilha</span>
+            <span>+ Adicionar Novo Modelo</span>
           </button>
           <span className="text-[11px] text-neutral-500 font-mono">
             Total de linhas: {filteredItems.length} modelo(s)
