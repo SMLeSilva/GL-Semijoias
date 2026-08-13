@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   ItemVenda,
   ResumoFinanceiro,
@@ -10,6 +10,7 @@ import {
   addAdminItem,
   updateAdminItem,
   deleteAdminItem,
+  importAdminItems,
   registrarVenda,
   calculateResumoFinanceiro,
 } from '@/lib/adminStorage';
@@ -19,7 +20,6 @@ import {
   PackageCheck,
   Plus,
   Search,
-  Edit2,
   Trash2,
   ShoppingBag,
   X,
@@ -27,14 +27,18 @@ import {
   RefreshCw,
   Sparkles,
   Boxes,
-  AlertCircle,
   CheckCircle2,
+  Table,
+  Download,
+  Upload,
+  Calculator,
 } from 'lucide-react';
 
 export default function AdminPage() {
   const [items, setItems] = useState<ItemVenda[]>([]);
   const [search, setSearch] = useState('');
   const [filterEstoque, setFilterEstoque] = useState<'TODOS' | 'DISPONIVEL' | 'ESGOTADO'>('TODOS');
+  const [saveToast, setSaveToast] = useState<string | null>(null);
 
   // Modais
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
@@ -43,7 +47,7 @@ export default function AdminPage() {
   const [isVendaModalOpen, setIsVendaModalOpen] = useState(false);
   const [selectedVendaItem, setSelectedVendaItem] = useState<ItemVenda | null>(null);
 
-  // Form de Produto (Novo / Editar)
+  // Form de Produto (Novo / Editar Modal)
   const [formNome, setFormNome] = useState('');
   const [formValor, setFormValor] = useState('');
   const [formLucro, setFormLucro] = useState('');
@@ -51,8 +55,11 @@ export default function AdminPage() {
   const [formObservacao, setFormObservacao] = useState('');
   const [formCategorySlug, setFormCategorySlug] = useState('brincos');
 
-  // Form de Registrar Venda (Somente quantidade!)
+  // Form de Registrar Venda
   const [vendaQtd, setVendaQtd] = useState('1');
+
+  // Ref de Input para Import CSV
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setItems(getAdminItems());
@@ -60,6 +67,13 @@ export default function AdminPage() {
 
   const refreshData = () => {
     setItems(getAdminItems());
+  };
+
+  const showToast = (message: string) => {
+    setSaveToast(message);
+    setTimeout(() => {
+      setSaveToast(null);
+    }, 2500);
   };
 
   const resumo: ResumoFinanceiro = useMemo(() => {
@@ -81,7 +95,129 @@ export default function AdminPage() {
     });
   }, [items, search, filterEstoque]);
 
-  // --- Handlers do Produto ---
+  // --- Handlers de Edição Direta estilo Excel ---
+  const handleCellChange = (id: number, field: keyof ItemVenda, value: any) => {
+    setItems((prevItems) => {
+      const updated = prevItems.map((item) => {
+        if (item.id === id) {
+          const newItem = { ...item, [field]: value };
+          // Recalcular custo se valor ou lucro mudar
+          if (field === 'valor' || field === 'lucro') {
+            const val = field === 'valor' ? Number(value) : item.valor;
+            const luc = field === 'lucro' ? Number(value) : item.lucro;
+            newItem.custo = Math.max(0, val - luc);
+          }
+          updateAdminItem(newItem);
+          return newItem;
+        }
+        return item;
+      });
+      return updated;
+    });
+    showToast('Alteração salva no Excel ✓');
+  };
+
+  const handleAddQuickRow = () => {
+    const newItem = addAdminItem({
+      nome: 'Novo Modelo (Edite aqui)',
+      valor: 100.00,
+      lucro: 50.00,
+      estoqueAtual: 5,
+      custo: 50.00,
+      observacao: '',
+      categorySlug: 'brincos',
+    });
+    refreshData();
+    showToast(`Nova linha #${newItem.id} adicionada!`);
+  };
+
+  // Exportar para CSV (Excel UTF-8 com BOM)
+  const handleExportCSV = () => {
+    const headers = ['Código', 'Nome', 'Categoria', 'Estoque', 'QtdVendida', 'ValorUnitario', 'LucroUnitario', 'CustoUnitario', 'Observacao'];
+    const rows = items.map((i) => [
+      i.id,
+      `"${(i.nome || '').replace(/"/g, '""')}"`,
+      `"${i.categorySlug || 'brincos'}"`,
+      i.estoqueAtual,
+      i.qtdVendida,
+      i.valor,
+      i.lucro,
+      i.custo ?? (i.valor - i.lucro),
+      `"${(i.observacao || '').replace(/"/g, '""')}"`,
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map((r) => r.join(';'))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `semijoias_estoque_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('Planilha CSV baixada para Excel!');
+  };
+
+  // Importar de CSV
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const text = evt.target?.result as string;
+        if (!text) return;
+
+        const lines = text.split(/\r?\n/).filter((line) => line.trim() !== '');
+        if (lines.length <= 1) return;
+
+        const separator = lines[0].includes(';') ? ';' : ',';
+        const importedItems: ItemVenda[] = [];
+
+        for (let i = 1; i < lines.length; i++) {
+          const cols = lines[i].split(separator).map((c) => c.trim().replace(/^"|"$/g, ''));
+          if (cols.length < 2) continue;
+
+          const id = parseInt(cols[0], 10) || (100 + i);
+          const nome = cols[1] || `Produto ${id}`;
+          const categorySlug = cols[2] || 'brincos';
+          const estoqueAtual = parseInt(cols[3], 10) || 0;
+          const qtdVendida = parseInt(cols[4], 10) || 0;
+          const valor = parseFloat(cols[5]?.replace(',', '.')) || 0;
+          const lucro = parseFloat(cols[6]?.replace(',', '.')) || 0;
+          const custo = cols[7] ? parseFloat(cols[7].replace(',', '.')) : (valor - lucro);
+          const observacao = cols[8] || '';
+
+          importedItems.push({
+            id,
+            nome,
+            categorySlug,
+            estoqueAtual,
+            qtdVendida,
+            valor,
+            lucro,
+            custo,
+            valorPago: qtdVendida * valor,
+            observacao,
+            historicoVendas: [],
+          });
+        }
+
+        if (importedItems.length > 0) {
+          importAdminItems(importedItems);
+          refreshData();
+          showToast(`${importedItems.length} modelos importados do CSV!`);
+        }
+      } catch (err) {
+        alert('Erro ao processar arquivo CSV. Certifique-se de que é uma planilha CSV válida.');
+      }
+    };
+    reader.readAsText(file, 'UTF-8');
+    if (e.target) e.target.value = '';
+  };
+
+  // --- Handlers do Modal Tradicional ---
   const handleOpenNewItem = () => {
     setEditingItem(null);
     setFormNome('');
@@ -90,17 +226,6 @@ export default function AdminPage() {
     setFormEstoqueAtual('10');
     setFormObservacao('');
     setFormCategorySlug('brincos');
-    setIsItemModalOpen(true);
-  };
-
-  const handleOpenEditItem = (item: ItemVenda) => {
-    setEditingItem(item);
-    setFormNome(item.nome);
-    setFormValor(String(item.valor));
-    setFormLucro(String(item.lucro));
-    setFormEstoqueAtual(String(item.estoqueAtual));
-    setFormObservacao(item.observacao || '');
-    setFormCategorySlug(item.categorySlug || 'brincos');
     setIsItemModalOpen(true);
   };
 
@@ -122,6 +247,7 @@ export default function AdminPage() {
         observacao: formObservacao,
         categorySlug: formCategorySlug,
       });
+      showToast('Modelo atualizado!');
     } else {
       addAdminItem({
         nome: formNome,
@@ -132,6 +258,7 @@ export default function AdminPage() {
         observacao: formObservacao,
         categorySlug: formCategorySlug,
       });
+      showToast('Novo modelo cadastrado!');
     }
 
     setIsItemModalOpen(false);
@@ -142,6 +269,7 @@ export default function AdminPage() {
     if (confirm(`Tem certeza que deseja excluir o modelo #${id}?`)) {
       deleteAdminItem(id);
       refreshData();
+      showToast(`Modelo #${id} excluído.`);
     }
   };
 
@@ -164,9 +292,9 @@ export default function AdminPage() {
     }
 
     registrarVenda(selectedVendaItem.id, q);
-
     setIsVendaModalOpen(false);
     refreshData();
+    showToast(`Venda de ${q} un gravada no histórico!`);
   };
 
   const fmt = (v: number) =>
@@ -179,38 +307,77 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Cabeçalho */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
+      {/* Toast flutuante de confirmação estilo Excel */}
+      {saveToast && (
+        <div className="fixed top-20 right-6 z-50 bg-emerald-500 text-neutral-950 px-4 py-2.5 rounded-xl font-bold text-xs shadow-2xl flex items-center gap-2 animate-bounce">
+          <CheckCircle2 className="w-4 h-4" />
+          <span>{saveToast}</span>
+        </div>
+      )}
+
+      {/* Cabeçalho Principal */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
         <div>
           <h1 className="font-serif text-2xl sm:text-3xl font-bold text-white tracking-wide flex items-center gap-2">
-            Painel de Controle de Estoque & Vendas
-            <Sparkles className="w-5 h-5 text-[#D4AF37]" />
+            Painel de Estoque & Planilha Excel
+            <Table className="w-6 h-6 text-[#D4AF37]" />
           </h1>
           <p className="text-xs sm:text-sm text-neutral-400 mt-1">
-            Gestão simplificada de modelos, saldo de estoque disponível e faturamento de vendas
+            Edite preços, estoques e descrições <strong>diretamente nos campos da tabela</strong> como no Excel.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Botão Exportar Excel */}
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-neutral-200 font-medium text-xs transition-colors"
+            title="Baixar planilha compatível com Microsoft Excel"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Exportar Excel</span>
+          </button>
+
+          {/* Botão Importar Excel */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImportCSV}
+            accept=".csv"
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-neutral-200 font-medium text-xs transition-colors"
+            title="Importar catálogo a partir de arquivo CSV/Excel"
+          >
+            <Upload className="w-3.5 h-3.5 text-sky-400" />
+            <span>Importar CSV</span>
+          </button>
+
+          {/* Botão Adicionar Linha Direta na Planilha */}
+          <button
+            onClick={handleAddQuickRow}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-bold text-xs transition-all shadow-md active:scale-95"
+            title="Inserir nova linha editável na planilha"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Linha Rápida</span>
+          </button>
+
+          {/* Atualizar / Recarregar */}
           <button
             onClick={refreshData}
-            className="p-2.5 rounded-xl border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 transition-colors"
+            className="p-2 rounded-xl border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 transition-colors"
             title="Atualizar Dados"
           >
             <RefreshCw className="w-4 h-4" />
-          </button>
-          <button
-            onClick={handleOpenNewItem}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#c49f27] text-neutral-950 font-bold text-xs sm:text-sm shadow-lg shadow-[#D4AF37]/10 transition-all active:scale-95"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Cadastrar Novo Modelo</span>
           </button>
         </div>
       </div>
 
       {/* Cards de Métricas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Faturamento Total */}
         <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 space-y-3 relative overflow-hidden">
           <div className="flex items-center justify-between">
@@ -252,26 +419,6 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Total em Caixa */}
-        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 space-y-3 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
-              Total Pago Recebido
-            </span>
-            <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-2xl font-bold text-white tracking-tight">
-              {fmt(resumo.totalPago)}
-            </div>
-            <p className="text-[11px] text-teal-400 font-medium">
-              Confirmado em caixa
-            </p>
-          </div>
-        </div>
-
         {/* Peças em Estoque */}
         <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 space-y-3 relative overflow-hidden">
           <div className="flex items-center justify-between">
@@ -293,7 +440,23 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Busca e Filtro */}
+      {/* Banner Informativo sobre a Edição Direta Excel */}
+      <div className="bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-2xl p-3.5 px-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-3 text-[#D4AF37]">
+          <Table className="w-5 h-5 shrink-0" />
+          <span>
+            <strong>Modo Planilha Excel Ativo:</strong> Clique e digite em qualquer célula (Nome, Categoria, Estoque, Preço, Lucro e Notas) para alterar na hora. Use <kbd className="bg-neutral-800 text-neutral-200 px-1.5 py-0.5 rounded font-mono text-[10px] border border-neutral-700">Tab</kbd> para ir para o próximo campo ou <kbd className="bg-neutral-800 text-neutral-200 px-1.5 py-0.5 rounded font-mono text-[10px] border border-neutral-700">Enter</kbd> para confirmar.
+          </span>
+        </div>
+        <button
+          onClick={handleOpenNewItem}
+          className="shrink-0 text-[11px] text-neutral-400 hover:text-white underline underline-offset-4"
+        >
+          Ou abrir formulário completo
+        </button>
+      </div>
+
+      {/* Busca e Filtros */}
       <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="relative w-full md:w-80">
           <Search className="w-4 h-4 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -301,7 +464,7 @@ export default function AdminPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por código ou nome do produto..."
+            placeholder="Buscar por código, nome ou notas..."
             className="w-full bg-neutral-950 border border-neutral-800 focus:border-[#D4AF37] rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder:text-neutral-500 focus:outline-none"
           />
         </div>
@@ -321,119 +484,190 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Tabela Principal Enxuta */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl">
+      {/* TABELA PRINCIPAL DE EDIÇÃO DIRETA ESTILO EXCEL */}
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-neutral-300">
+          <table className="w-full text-left text-xs border-collapse">
             <thead className="bg-neutral-950 text-neutral-400 uppercase font-semibold text-[11px] border-b border-neutral-800 tracking-wider">
               <tr>
-                <th className="py-4 px-4">Código</th>
-                <th className="py-4 px-4">Produto</th>
-                <th className="py-4 px-4 text-center">Estoque Atual</th>
-                <th className="py-4 px-4 text-center">Qtd Vendida</th>
-                <th className="py-4 px-4">Valor Un.</th>
-                <th className="py-4 px-4">Lucro Un.</th>
-                <th className="py-4 px-4">Total Faturado</th>
-                <th className="py-4 px-4 text-[#D4AF37]">Total Lucro</th>
-                <th className="py-4 px-4 text-right">Ações</th>
+                <th className="py-3.5 px-3 border-r border-neutral-800/80 w-16 text-center">Código</th>
+                <th className="py-3.5 px-4 border-r border-neutral-800/80 min-w-[220px]">Nome do Modelo</th>
+                <th className="py-3.5 px-3 border-r border-neutral-800/80 w-32">Categoria</th>
+                <th className="py-3.5 px-3 border-r border-neutral-800/80 w-24 text-center">Estoque</th>
+                <th className="py-3.5 px-3 border-r border-neutral-800/80 w-24 text-center">Vendas</th>
+                <th className="py-3.5 px-3 border-r border-neutral-800/80 w-36 min-w-[140px] text-right">Valor Un. (R$)</th>
+                <th className="py-3.5 px-3 border-r border-neutral-800/80 w-36 min-w-[140px] text-right">Lucro Un. (R$)</th>
+                <th className="py-3.5 px-3 border-r border-neutral-800/80 w-32 min-w-[125px] text-right text-neutral-500">
+                  <span className="flex items-center justify-end gap-1" title="Fórmula Excel: Custo = Valor - Lucro">
+                    <Calculator className="w-3 h-3 text-[#D4AF37]" /> Custo (fx)
+                  </span>
+                </th>
+                <th className="py-3.5 px-3 border-r border-neutral-800/80 w-36 min-w-[140px] text-right">Total Faturado</th>
+                <th className="py-3.5 px-3 border-r border-neutral-800/80 w-36 min-w-[140px] text-right text-[#D4AF37]">Total Lucro</th>
+                <th className="py-3.5 px-4 border-r border-neutral-800/80 min-w-[180px]">Observações / Gaveta</th>
+                <th className="py-3.5 px-4 text-center w-28">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-800/60 font-mono text-[12px]">
+            <tbody className="divide-y divide-neutral-800/70 font-sans text-[12px]">
               {filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-neutral-500 font-sans">
-                    Nenhum produto cadastrado com os filtros selecionados.
+                  <td colSpan={12} className="py-12 text-center text-neutral-500">
+                    Nenhum modelo cadastrado. Clique em <strong>"+ Linha Rápida"</strong> para começar!
                   </td>
                 </tr>
               ) : (
                 filteredItems.map((item) => {
+                  const custoCalc = item.custo ?? Math.max(0, item.valor - item.lucro);
                   const totalFaturadoItem = item.qtdVendida * item.valor;
                   const totalLucroItem = item.qtdVendida * item.lucro;
 
                   return (
-                    <tr key={item.id} className="hover:bg-neutral-800/40 transition-colors">
-                      {/* CÓDIGO */}
-                      <td className="py-3.5 px-4 font-bold text-[#D4AF37]">
+                    <tr
+                      key={item.id}
+                      className="hover:bg-neutral-800/30 transition-colors group border-b border-neutral-800/40"
+                    >
+                      {/* CÓDIGO (Readonly) */}
+                      <td className="py-2.5 px-3 border-r border-neutral-800/50 font-mono font-bold text-[#D4AF37] text-center bg-neutral-950/40">
                         #{item.id}
                       </td>
 
-                      {/* NOME */}
-                      <td className="py-3.5 px-4 font-sans font-medium text-white max-w-[240px] truncate" title={item.nome}>
-                        {item.nome}
+                      {/* NOME DO MODELO (Input Direto) */}
+                      <td className="py-1.5 px-2 border-r border-neutral-800/50">
+                        <input
+                          type="text"
+                          value={item.nome}
+                          onChange={(e) => handleCellChange(item.id, 'nome', e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') e.currentTarget.blur();
+                          }}
+                          className="w-full bg-transparent hover:bg-neutral-950 focus:bg-neutral-950 border border-transparent hover:border-neutral-800 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-lg px-2.5 py-1.5 text-xs sm:text-sm text-white font-medium focus:outline-none transition-all"
+                          placeholder="Nome do produto..."
+                        />
                       </td>
 
-                      {/* ESTOQUE ATUAL */}
-                      <td className="py-3.5 px-4 text-center font-sans">
-                        {item.estoqueAtual > 0 ? (
-                          <span className="px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-bold inline-flex items-center gap-1">
-                            <Boxes className="w-3 h-3" />
-                            {item.estoqueAtual} un
-                          </span>
-                        ) : (
-                          <span className="px-2.5 py-1 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-bold inline-flex items-center gap-1">
-                            <AlertCircle className="w-3 h-3" />
-                            Esgotado
-                          </span>
-                        )}
+                      {/* CATEGORIA (Select Direto) */}
+                      <td className="py-1.5 px-2 border-r border-neutral-800/50">
+                        <select
+                          value={item.categorySlug || 'brincos'}
+                          onChange={(e) => handleCellChange(item.id, 'categorySlug', e.target.value)}
+                          className="w-full bg-transparent hover:bg-neutral-950 focus:bg-neutral-950 border border-transparent hover:border-neutral-800 focus:border-[#D4AF37] text-neutral-300 rounded-lg px-2 py-1.5 text-xs sm:text-sm focus:outline-none transition-all"
+                        >
+                          <option value="brincos" className="bg-neutral-900 text-white">Brincos</option>
+                          <option value="colares" className="bg-neutral-900 text-white">Colares</option>
+                          <option value="pulseiras" className="bg-neutral-900 text-white">Pulseiras</option>
+                          <option value="aneis" className="bg-neutral-900 text-white">Anéis</option>
+                          <option value="tornozeleiras" className="bg-neutral-900 text-white">Tornozeleiras</option>
+                          <option value="conjuntos" className="bg-neutral-900 text-white">Conjuntos</option>
+                        </select>
                       </td>
 
-                      {/* QTD VENDIDA */}
-                      <td className="py-3.5 px-4 text-center font-sans">
+                      {/* ESTOQUE ATUAL (Input Number Direto com badge visual) */}
+                      <td className="py-1.5 px-2 border-r border-neutral-800/50 text-center">
+                        <div className="flex items-center justify-center">
+                          <input
+                            type="number"
+                            min="0"
+                            value={item.estoqueAtual}
+                            onChange={(e) => handleCellChange(item.id, 'estoqueAtual', parseInt(e.target.value, 10) || 0)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') e.currentTarget.blur();
+                            }}
+                            className={`w-20 text-center font-bold font-mono rounded-lg px-2 py-1.5 text-xs sm:text-sm focus:outline-none transition-all ${
+                              item.estoqueAtual > 0
+                                ? 'bg-sky-500/10 border border-sky-500/30 text-sky-400 focus:bg-neutral-950 focus:border-sky-500'
+                                : 'bg-rose-500/10 border border-rose-500/30 text-rose-400 focus:bg-neutral-950 focus:border-rose-500'
+                            }`}
+                          />
+                        </div>
+                      </td>
+
+                      {/* QTD VENDIDA (Readonly) */}
+                      <td className="py-2.5 px-3 border-r border-neutral-800/50 text-center font-mono">
                         <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold inline-flex items-center gap-1">
-                          <PackageCheck className="w-3 h-3" />
+                          <PackageCheck className="w-3.5 h-3.5" />
                           {item.qtdVendida} un
                         </span>
                       </td>
 
-                      {/* VALOR UN */}
-                      <td className="py-3.5 px-4 font-semibold text-white">
-                        {fmt(item.valor)}
+                      {/* VALOR UNITÁRIO (Input Number Direto - Amplo) */}
+                      <td className="py-1.5 px-2 border-r border-neutral-800/50">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={item.valor}
+                          onChange={(e) => handleCellChange(item.id, 'valor', parseFloat(e.target.value) || 0)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') e.currentTarget.blur();
+                          }}
+                          className="w-full text-right bg-neutral-950/40 hover:bg-neutral-950 focus:bg-neutral-950 border border-neutral-800/60 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] rounded-lg px-3 py-1.5 text-xs sm:text-sm text-white font-mono font-bold focus:outline-none transition-all"
+                        />
                       </td>
 
-                      {/* LUCRO UN */}
-                      <td className="py-3.5 px-4 font-semibold text-emerald-400">
-                        {fmt(item.lucro)}
+                      {/* LUCRO UNITÁRIO (Input Number Direto - Amplo) */}
+                      <td className="py-1.5 px-2 border-r border-neutral-800/50">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={item.lucro}
+                          onChange={(e) => handleCellChange(item.id, 'lucro', parseFloat(e.target.value) || 0)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') e.currentTarget.blur();
+                          }}
+                          className="w-full text-right bg-neutral-950/40 hover:bg-neutral-950 focus:bg-neutral-950 border border-neutral-800/60 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-emerald-400 font-mono font-bold focus:outline-none transition-all"
+                        />
                       </td>
 
-                      {/* TOTAL FATURADO */}
-                      <td className="py-3.5 px-4 font-semibold text-white">
+                      {/* CUSTO UNITÁRIO (Fórmula Automática = Valor - Lucro) */}
+                      <td className="py-2.5 px-3 border-r border-neutral-800/50 text-right font-mono text-xs sm:text-sm text-neutral-400 bg-neutral-950/20 font-medium">
+                        {fmt(custoCalc)}
+                      </td>
+
+                      {/* TOTAL FATURADO (Calculado) */}
+                      <td className="py-2.5 px-3 border-r border-neutral-800/50 text-right font-mono text-xs sm:text-sm font-bold text-white">
                         {fmt(totalFaturadoItem)}
                       </td>
 
-                      {/* TOTAL LUCRO */}
-                      <td className="py-3.5 px-4 font-semibold text-[#D4AF37]">
+                      {/* TOTAL LUCRO (Calculado) */}
+                      <td className="py-2.5 px-3 border-r border-neutral-800/50 text-right font-mono text-xs sm:text-sm font-bold text-[#D4AF37]">
                         {fmt(totalLucroItem)}
                       </td>
 
-                      {/* AÇÕES */}
-                      <td className="py-3.5 px-4 text-right font-sans">
-                        <div className="flex items-center justify-end gap-1.5">
+                      {/* OBSERVAÇÕES / GAVETA (Input Direto) */}
+                      <td className="py-1.5 px-2 border-r border-neutral-800/50">
+                        <input
+                          type="text"
+                          value={item.observacao || ''}
+                          onChange={(e) => handleCellChange(item.id, 'observacao', e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') e.currentTarget.blur();
+                          }}
+                          placeholder="Anotações de localização..."
+                          className="w-full bg-transparent hover:bg-neutral-950 focus:bg-neutral-950 border border-transparent hover:border-neutral-800 focus:border-neutral-600 rounded-lg px-2.5 py-1 text-xs text-neutral-300 placeholder:text-neutral-600 focus:outline-none transition-all"
+                        />
+                      </td>
+
+                      {/* AÇÕES (Vender / Excluir) */}
+                      <td className="py-2 px-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
                           <button
                             onClick={() => handleOpenVendaModal(item)}
                             disabled={item.estoqueAtual === 0}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
+                            className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
                               item.estoqueAtual > 0
-                                ? 'bg-emerald-500 hover:bg-emerald-600 text-neutral-950 shadow-md active:scale-95'
+                                ? 'bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-neutral-950'
                                 : 'bg-neutral-800 text-neutral-600 cursor-not-allowed'
                             }`}
                             title={item.estoqueAtual > 0 ? 'Registrar Venda' : 'Estoque Esgotado'}
                           >
                             <ShoppingBag className="w-3.5 h-3.5" />
-                            <span>Vender</span>
-                          </button>
-
-                          <button
-                            onClick={() => handleOpenEditItem(item)}
-                            className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white transition-colors"
-                            title="Editar Modelo / Repor Estoque"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
                           </button>
 
                           <button
                             onClick={() => handleDelete(item.id)}
                             className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white transition-colors"
-                            title="Excluir"
+                            title="Excluir Linha"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -446,9 +680,23 @@ export default function AdminPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Rodapé da Tabela: Linha para Inserção Rápida */}
+        <div className="p-3 bg-neutral-950 border-t border-neutral-800 flex items-center justify-between">
+          <button
+            onClick={handleAddQuickRow}
+            className="flex items-center gap-2 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-neutral-900 border border-dashed border-emerald-500/30"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Adicionar Nova Linha na Planilha</span>
+          </button>
+          <span className="text-[11px] text-neutral-500 font-mono">
+            Total de linhas: {filteredItems.length} modelo(s)
+          </span>
+        </div>
       </div>
 
-      {/* --- MODAL NOVO / EDITAR MODELO --- */}
+      {/* --- MODAL NOVO / EDITAR MODELO (OPCIONAL/SUPORTE) --- */}
       {isItemModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/80 backdrop-blur-md p-4 animate-in fade-in">
           <div className="relative w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
@@ -464,7 +712,7 @@ export default function AdminPage() {
                 {editingItem ? `Editar Modelo #${editingItem.id}` : 'Cadastrar Novo Modelo no Estoque'}
               </h3>
               <p className="text-xs text-neutral-400 mt-1">
-                Configure os valores unitários e a quantidade disponível em estoque.
+                Você também pode editar diretamente em qualquer célula da planilha!
               </p>
             </div>
 

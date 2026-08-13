@@ -241,6 +241,11 @@ export function deleteAdminItem(id: number): void {
   saveAdminItems(updated);
 }
 
+export function importAdminItems(newItems: ItemVenda[]): void {
+  saveAdminItems(newItems);
+}
+
+
 // Registrar uma nova venda de X unidades de uma peça
 export function registrarVenda(
   itemId: number,

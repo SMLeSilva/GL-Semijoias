@@ -73,7 +73,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR" className={`${cormorant.variable} ${plusJakarta.variable} scroll-smooth`}>
+    <html lang="pt-BR" data-scroll-behavior="smooth" className={`${cormorant.variable} ${plusJakarta.variable} scroll-smooth`}>
       <body className="flex flex-col min-h-screen bg-white text-neutral-900 antialiased selection:bg-[#D4AF37] selection:text-white">
         <PublicLayoutShell>{children}</PublicLayoutShell>
       </body>
