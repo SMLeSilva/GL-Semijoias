@@ -84,7 +84,7 @@ export const categories: Category[] = [
     name: 'Piercings',
     shortDescription: 'Piercings fake de pressão e pontos de luz em semijoia e aço cirúrgico.',
     description: 'Explore nossos piercings delicados, modelos de pressão (fakes) e opções em aço inoxidável cirúrgico com cravação de zircônias de alto brilho.',
-    coverImage: 'https://images.unsplash.com/photo-1611591477158-45a0b73c4d7e?q=80&w=1000&auto=format&fit=crop',
+    coverImage: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=1000&auto=format&fit=crop',
     badgeText: 'Tendência & Conforto',
     seoTitle: 'Catálogo de Piercings de Pressão e Aço Inox | Semijoias',
     seoDescription: 'Piercings fakes e cravejados em semijoia e aço antialérgico. Realce seu visual com peças confortáveis e modernas.',
