@@ -10,13 +10,16 @@ export interface Category {
   seoDescription: string;
 }
 
+export type ProductMaterial = 'semijoia' | 'inox';
+
 export interface Product {
   id: string;
   slug: string;
   name: string;
   categorySlug: string;
   categoryName: string;
-  bathInfo: string; // Ex: "Banhado a Ouro 18k (10 Camadas)", "Ródio Branco Luxo", etc.
+  material?: ProductMaterial;
+  bathInfo: string; // Ex: "Banhado a Ouro 18k (10 Camadas)", "Aço Inoxidável 316L", etc.
   price?: number;
   priceConsult?: boolean; // Se true, exibe "Sob consulta"
   description: string;

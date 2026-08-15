@@ -7,6 +7,7 @@ import {
 } from '@/types/admin';
 import {
   getAdminItems,
+  fetchAdminItemsAsync,
   addAdminItem,
   updateAdminItem,
   deleteAdminItem,
@@ -30,6 +31,8 @@ import {
   CheckCircle2,
   Table,
   Calculator,
+  Database,
+  Cloud,
 } from 'lucide-react';
 
 export default function AdminPage() {
@@ -37,6 +40,8 @@ export default function AdminPage() {
   const [search, setSearch] = useState('');
   const [filterEstoque, setFilterEstoque] = useState<'TODOS' | 'DISPONIVEL' | 'ESGOTADO'>('TODOS');
   const [saveToast, setSaveToast] = useState<string | null>(null);
+  const [isSupabaseLive, setIsSupabaseLive] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Modais
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
@@ -59,12 +64,27 @@ export default function AdminPage() {
   // Ref de Input para Import CSV
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const { items: loadedItems, isSupabase } = await fetchAdminItemsAsync();
+      setItems(loadedItems);
+      setIsSupabaseLive(isSupabase);
+    } catch (err) {
+      setItems(getAdminItems());
+      setIsSupabaseLive(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    setItems(getAdminItems());
+    loadData();
   }, []);
 
   const refreshData = () => {
-    setItems(getAdminItems());
+    loadData();
+    showToast('Dados sincronizados!');
   };
 
   const showToast = (message: string) => {
@@ -316,10 +336,24 @@ export default function AdminPage() {
       {/* Cabeçalho Principal */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
         <div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-white tracking-wide flex items-center gap-2">
-            Painel de Controle de Estoque & Vendas
-            <Sparkles className="w-6 h-6 text-[#D4AF37]" />
-          </h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-white tracking-wide flex items-center gap-2">
+              Painel de Controle de Estoque & Vendas
+              <Sparkles className="w-6 h-6 text-[#D4AF37]" />
+            </h1>
+
+            {isSupabaseLive ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Supabase Conectado
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                Modo Local (Cache)
+              </span>
+            )}
+          </div>
           <p className="text-xs sm:text-sm text-neutral-400 mt-1">
             Gestão simplificada de modelos, edição rápida de valores e saldo de estoque
           </p>
@@ -513,6 +547,8 @@ export default function AdminPage() {
                           <option value="aneis" className="bg-neutral-900 text-white">Anéis</option>
                           <option value="tornozeleiras" className="bg-neutral-900 text-white">Tornozeleiras</option>
                           <option value="conjuntos" className="bg-neutral-900 text-white">Conjuntos</option>
+                          <option value="relogios" className="bg-neutral-900 text-white">Relógios</option>
+                          <option value="piercings" className="bg-neutral-900 text-white">Piercings</option>
                         </select>
                       </td>
 
@@ -748,6 +784,8 @@ export default function AdminPage() {
                   <option value="aneis">Anéis</option>
                   <option value="tornozeleiras">Tornozeleiras</option>
                   <option value="conjuntos">Conjuntos</option>
+                  <option value="relogios">Relógios</option>
+                  <option value="piercings">Piercings</option>
                 </select>
               </div>
 

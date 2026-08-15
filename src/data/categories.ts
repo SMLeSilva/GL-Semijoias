@@ -67,6 +67,28 @@ export const categories: Category[] = [
     seoTitle: 'Conjuntos de Semijoias Banhadas a Ouro | Kits Colar e Brinco',
     seoDescription: 'Conjuntos sofisticados de semijoias finas. Brinco e colar combinando com apresentação luxuosa.',
   },
+  {
+    id: 'relogios',
+    slug: 'relogios',
+    name: 'Relógios',
+    shortDescription: 'Modelos clássicos e modernos em semijoia e aço inoxidável de alta durabilidade.',
+    description: 'Nossa coleção de relógios combina precisão, requinte e resistência. Peças com acabamento de joalheria e opções em aço inoxidável e banhadas a ouro.',
+    coverImage: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1000&auto=format&fit=crop',
+    badgeText: 'Precisão & Estilo',
+    seoTitle: 'Catálogo de Relógios Femininos e Masculinos | Semijoias & Aço Inox',
+    seoDescription: 'Relógios sofisticados em aço inox e banhados a ouro 18k com maquinário de alta precisão e design refinado.',
+  },
+  {
+    id: 'piercings',
+    slug: 'piercings',
+    name: 'Piercings',
+    shortDescription: 'Piercings fake de pressão e pontos de luz em semijoia e aço cirúrgico.',
+    description: 'Explore nossos piercings delicados, modelos de pressão (fakes) e opções em aço inoxidável cirúrgico com cravação de zircônias de alto brilho.',
+    coverImage: 'https://images.unsplash.com/photo-1611591477158-45a0b73c4d7e?q=80&w=1000&auto=format&fit=crop',
+    badgeText: 'Tendência & Conforto',
+    seoTitle: 'Catálogo de Piercings de Pressão e Aço Inox | Semijoias',
+    seoDescription: 'Piercings fakes e cravejados em semijoia e aço antialérgico. Realce seu visual com peças confortáveis e modernas.',
+  },
 ];
 
 export function getCategoryBySlug(slug: string): Category | undefined {

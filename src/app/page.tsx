@@ -13,21 +13,21 @@ export default function HomePage() {
       <HeroBanner />
 
       {/* Seção Principal: Listagem dos Catálogos (Categorias) em Cards Horizontais */}
-      <section id="catalogos" className="py-20 bg-white">
+      <section id="catalogos" className="py-20 bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Cabeçalho da Seção */}
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider text-[#B8962E] bg-[#FBF8EE] border border-[#E6C875]/40">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/20">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Nossos Catálogos</span>
             </div>
 
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 tracking-tight">
-              Explore Nossas Coleções de Semijoias
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">
+              Explore Nossas Coleções de Semijoias & Aço Inox
             </h2>
 
-            <p className="text-neutral-600 text-sm sm:text-base leading-relaxed">
-              Navegue pelas nossas 6 categorias exclusivas.
+            <p className="text-neutral-400 text-sm sm:text-base leading-relaxed">
+              Navegue pelas nossas 8 categorias exclusivas com opções em semijoias banhadas a ouro e peças em aço inox.
             </p>
 
             <div className="pt-2 flex justify-center">

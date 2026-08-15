@@ -1,185 +1,19 @@
 import { ItemVenda, ResumoFinanceiro, StatusPagamento, RegistroVenda } from '@/types/admin';
+import { supabase, isSupabaseConfigured, mapRowToItemVenda, mapItemVendaToRow, ProdutoRow } from './supabase';
 
 const STORAGE_KEY_ITEMS = 'semijoias_admin_items_v4';
-const STORAGE_KEY_PIN = 'semijoias_admin_pin';
 const STORAGE_KEY_AUTH = 'semijoias_admin_auth';
 
-const DEFAULT_PIN = '1234';
+const DEFAULT_PIN = process.env.NEXT_PUBLIC_ADMIN_PIN || '1234';
 
 // Sementes de dados iniciais para cada Modelo de Produto
-const INITIAL_ITEMS: ItemVenda[] = [
-  {
-    id: 101,
-    nome: 'Argola Tubo Cravejada Zircônias Luxo (BR-101)',
-    valor: 189.90,
-    custo: 69.90,
-    lucro: 120.00,
-    estoqueAtual: 8,
-    qtdVendida: 2,
-    valorPago: 379.80,
-    formaPagamento: 'PIX Integrado',
-    statusPagamento: 'PAGO',
-    observacao: 'Produto de altíssima saída no showroom',
-    categorySlug: 'brincos',
-    categoryName: 'Brincos',
-    historicoVendas: [
-      {
-        id: 'v101-1',
-        dataVenda: '2026-08-01',
-        quantidade: 2,
-        valorTotal: 379.80,
-        formaPagamento: 'PIX Integrado',
-        statusPagamento: 'PAGO',
-        valorPago: 379.80,
-        observacao: 'Cliente VIP - Venda presencial',
-      },
-    ],
-  },
-  {
-    id: 102,
-    nome: 'Ear Cuff Gotas Cristal Ródio (BR-102)',
-    valor: 149.00,
-    custo: 49.00,
-    lucro: 100.00,
-    estoqueAtual: 5,
-    qtdVendida: 1,
-    valorPago: 149.00,
-    formaPagamento: 'PIX',
-    statusPagamento: 'PAGO',
-    observacao: 'Peça banhada a ródio branco',
-    categorySlug: 'brincos',
-    categoryName: 'Brincos',
-    historicoVendas: [
-      {
-        id: 'v102-1',
-        dataVenda: '2026-08-05',
-        quantidade: 1,
-        valorTotal: 149.00,
-        formaPagamento: 'PIX',
-        statusPagamento: 'PAGO',
-        valorPago: 149.00,
-        observacao: 'Venda enviada por correios',
-      },
-    ],
-  },
-  {
-    id: 201,
-    nome: 'Colar Riviera Zircônias 3mm Ouro 18k (CL-201)',
-    valor: 279.90,
-    custo: 99.90,
-    lucro: 180.00,
-    estoqueAtual: 4,
-    qtdVendida: 1,
-    valorPago: 279.90,
-    formaPagamento: 'Cartão de Crédito 3x',
-    statusPagamento: 'PAGO',
-    observacao: 'Enviado por motoboy',
-    categorySlug: 'colares',
-    categoryName: 'Colares',
-    historicoVendas: [
-      {
-        id: 'v201-1',
-        dataVenda: '2026-08-10',
-        quantidade: 1,
-        valorTotal: 279.90,
-        formaPagamento: 'Cartão de Crédito 3x',
-        statusPagamento: 'PAGO',
-        valorPago: 279.90,
-        observacao: 'Enviado por motoboy',
-      },
-    ],
-  },
-  {
-    id: 202,
-    nome: 'Colar Gravatinha com Pérola Natural (CL-202)',
-    valor: 199.00,
-    custo: 79.00,
-    lucro: 120.00,
-    estoqueAtual: 6,
-    qtdVendida: 1,
-    valorPago: 199.00,
-    formaPagamento: 'PIX',
-    statusPagamento: 'PAGO',
-    observacao: 'Reserva para entrega presencial',
-    categorySlug: 'colares',
-    categoryName: 'Colares',
-    historicoVendas: [
-      {
-        id: 'v202-1',
-        dataVenda: '2026-08-12',
-        quantidade: 1,
-        valorTotal: 199.00,
-        formaPagamento: 'PIX',
-        statusPagamento: 'PAGO',
-        valorPago: 199.00,
-        observacao: 'Venda presencial',
-      },
-    ],
-  },
-  {
-    id: 301,
-    nome: 'Bracelete Estruturado Cravejado Ouro 18k (PS-301)',
-    valor: 249.00,
-    custo: 89.00,
-    lucro: 160.00,
-    estoqueAtual: 10,
-    qtdVendida: 0,
-    valorPago: 0,
-    formaPagamento: '',
-    statusPagamento: 'PAGO',
-    observacao: 'Peças no showroom principal',
-    categorySlug: 'pulseiras',
-    categoryName: 'Pulseiras',
-    historicoVendas: [],
-  },
-  {
-    id: 401,
-    nome: 'Anel Solitário Zircônia Central 8mm (AN-401)',
-    valor: 139.90,
-    custo: 49.90,
-    lucro: 90.00,
-    estoqueAtual: 12,
-    qtdVendida: 0,
-    valorPago: 0,
-    formaPagamento: '',
-    statusPagamento: 'PAGO',
-    observacao: 'Disponível no estoque (Aros variados)',
-    categorySlug: 'aneis',
-    categoryName: 'Anéis',
-    historicoVendas: [],
-  },
-  {
-    id: 601,
-    nome: 'Conjunto Colar e Brinco Gota Cristal Luxo (CJ-601)',
-    valor: 299.90,
-    custo: 109.90,
-    lucro: 190.00,
-    estoqueAtual: 3,
-    qtdVendida: 2,
-    valorPago: 599.80,
-    formaPagamento: 'PIX + Cartão',
-    statusPagamento: 'PAGO',
-    observacao: 'Acompanha caixinha aveludada',
-    categorySlug: 'conjuntos',
-    categoryName: 'Conjuntos',
-    historicoVendas: [
-      {
-        id: 'v601-1',
-        dataVenda: '2026-08-08',
-        quantidade: 2,
-        valorTotal: 599.80,
-        formaPagamento: 'PIX + Cartão',
-        statusPagamento: 'PAGO',
-        valorPago: 599.80,
-        observacao: 'Vendidas 2 unidades para presente',
-      },
-    ],
-  },
-];
+export const INITIAL_ITEMS: ItemVenda[] = [];
 
 function isBrowser(): boolean {
   return typeof window !== 'undefined';
 }
+
+/* --- Leitura e Escrita Local (Fallback e Cache Rápido) --- */
 
 export function getAdminItems(): ItemVenda[] {
   if (!isBrowser()) return INITIAL_ITEMS;
@@ -192,7 +26,7 @@ export function getAdminItems(): ItemVenda[] {
     }
     return JSON.parse(data);
   } catch (error) {
-    console.error('Erro ao ler itens do admin:', error);
+    console.error('Erro ao ler itens do cache local:', error);
     return INITIAL_ITEMS;
   }
 }
@@ -202,10 +36,129 @@ export function saveAdminItems(items: ItemVenda[]): void {
   try {
     localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(items));
   } catch (error) {
-    console.error('Erro ao salvar itens do admin:', error);
+    console.error('Erro ao salvar itens no cache local:', error);
   }
 }
 
+/* --- Operações Integradas com Supabase (com fallback) --- */
+
+export async function fetchAdminItemsAsync(): Promise<{ items: ItemVenda[]; isSupabase: boolean }> {
+  if (!supabase || !isSupabaseConfigured) {
+    return { items: getAdminItems(), isSupabase: false };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('produtos')
+      .select('*')
+      .order('id', { ascending: false });
+
+    if (error) {
+      console.warn('Erro ao consultar Supabase, usando cache local:', error.message);
+      return { items: getAdminItems(), isSupabase: false };
+    }
+
+    if (data && data.length > 0) {
+      const items = data.map((row: ProdutoRow) => mapRowToItemVenda(row));
+      saveAdminItems(items); // Sincroniza cache local
+      return { items, isSupabase: true };
+    }
+
+    // Se a tabela estiver vazia, faz o seed inicial
+    const seedRows = INITIAL_ITEMS.map(mapItemVendaToRow);
+    const { error: insertError } = await supabase.from('produtos').insert(seedRows);
+    if (!insertError) {
+      saveAdminItems(INITIAL_ITEMS);
+      return { items: INITIAL_ITEMS, isSupabase: true };
+    }
+
+    return { items: getAdminItems(), isSupabase: false };
+  } catch (err) {
+    console.error('Exceção ao buscar produtos do Supabase:', err);
+    return { items: getAdminItems(), isSupabase: false };
+  }
+}
+
+export async function addAdminItemAsync(
+  newItem: Omit<ItemVenda, 'id' | 'qtdVendida' | 'valorPago'>
+): Promise<ItemVenda> {
+  const items = getAdminItems();
+  const nextId = items.length > 0 ? Math.max(...items.map((i) => i.id)) + 1 : 101;
+  const item: ItemVenda = {
+    ...newItem,
+    id: nextId,
+    estoqueAtual: newItem.estoqueAtual ?? 1,
+    qtdVendida: 0,
+    valorPago: 0,
+    historicoVendas: [],
+    custo: newItem.custo ?? (newItem.valor - newItem.lucro),
+  };
+
+  const updated = [item, ...items];
+  saveAdminItems(updated);
+
+  if (supabase && isSupabaseConfigured) {
+    try {
+      const row = mapItemVendaToRow(item);
+      const { error } = await supabase.from('produtos').insert([row]);
+      if (error) {
+        console.error('Erro ao inserir item no Supabase:', error.message);
+      }
+    } catch (err) {
+      console.error('Erro ao conectar ao Supabase para inserção:', err);
+    }
+  }
+
+  return item;
+}
+
+export async function updateAdminItemAsync(updatedItem: ItemVenda): Promise<void> {
+  const items = getAdminItems();
+  const index = items.findIndex((i) => i.id === updatedItem.id);
+  const normalizedItem: ItemVenda = {
+    ...updatedItem,
+    custo: updatedItem.custo ?? (updatedItem.valor - updatedItem.lucro),
+  };
+
+  if (index !== -1) {
+    items[index] = normalizedItem;
+    saveAdminItems(items);
+  }
+
+  if (supabase && isSupabaseConfigured) {
+    try {
+      const row = mapItemVendaToRow(normalizedItem);
+      const { error } = await supabase
+        .from('produtos')
+        .update(row)
+        .eq('id', normalizedItem.id);
+      if (error) {
+        console.error('Erro ao atualizar item no Supabase:', error.message);
+      }
+    } catch (err) {
+      console.error('Erro ao conectar ao Supabase para atualização:', err);
+    }
+  }
+}
+
+export async function deleteAdminItemAsync(id: number): Promise<void> {
+  const items = getAdminItems();
+  const updated = items.filter((i) => i.id !== id);
+  saveAdminItems(updated);
+
+  if (supabase && isSupabaseConfigured) {
+    try {
+      const { error } = await supabase.from('produtos').delete().eq('id', id);
+      if (error) {
+        console.error('Erro ao deletar item no Supabase:', error.message);
+      }
+    } catch (err) {
+      console.error('Erro ao conectar ao Supabase para exclusão:', err);
+    }
+  }
+}
+
+// Versões síncronas legadas para compatibilidade
 export function addAdminItem(newItem: Omit<ItemVenda, 'id' | 'qtdVendida' | 'valorPago'>): ItemVenda {
   const items = getAdminItems();
   const nextId = items.length > 0 ? Math.max(...items.map((i) => i.id)) + 1 : 101;
@@ -220,6 +173,9 @@ export function addAdminItem(newItem: Omit<ItemVenda, 'id' | 'qtdVendida' | 'val
   };
   const updated = [item, ...items];
   saveAdminItems(updated);
+  if (supabase && isSupabaseConfigured) {
+    supabase.from('produtos').insert([mapItemVendaToRow(item)]).then();
+  }
   return item;
 }
 
@@ -227,11 +183,15 @@ export function updateAdminItem(updatedItem: ItemVenda): void {
   const items = getAdminItems();
   const index = items.findIndex((i) => i.id === updatedItem.id);
   if (index !== -1) {
-    items[index] = {
+    const item = {
       ...updatedItem,
       custo: updatedItem.custo ?? (updatedItem.valor - updatedItem.lucro),
     };
+    items[index] = item;
     saveAdminItems(items);
+    if (supabase && isSupabaseConfigured) {
+      supabase.from('produtos').update(mapItemVendaToRow(item)).eq('id', item.id).then();
+    }
   }
 }
 
@@ -239,19 +199,25 @@ export function deleteAdminItem(id: number): void {
   const items = getAdminItems();
   const updated = items.filter((i) => i.id !== id);
   saveAdminItems(updated);
+  if (supabase && isSupabaseConfigured) {
+    supabase.from('produtos').delete().eq('id', id).then();
+  }
 }
 
 export function importAdminItems(newItems: ItemVenda[]): void {
   saveAdminItems(newItems);
+  if (supabase && isSupabaseConfigured) {
+    const rows = newItems.map(mapItemVendaToRow);
+    supabase.from('produtos').upsert(rows).then();
+  }
 }
 
-
 // Registrar uma nova venda de X unidades de uma peça
-export function registrarVenda(
+export async function registrarVendaAsync(
   itemId: number,
   qtdAVender: number,
   dataVenda?: string
-): void {
+): Promise<void> {
   const items = getAdminItems();
   const index = items.findIndex((i) => i.id === itemId);
   if (index === -1) return;
@@ -275,7 +241,7 @@ export function registrarVenda(
   const novoValorPago = (item.valorPago || 0) + totalVenda;
   const historico = [novaTransacao, ...(item.historicoVendas || [])];
 
-  items[index] = {
+  const updatedItem: ItemVenda = {
     ...item,
     estoqueAtual,
     qtdVendida,
@@ -283,7 +249,25 @@ export function registrarVenda(
     historicoVendas: historico,
   };
 
+  items[index] = updatedItem;
   saveAdminItems(items);
+
+  if (supabase && isSupabaseConfigured) {
+    try {
+      const row = mapItemVendaToRow(updatedItem);
+      await supabase.from('produtos').update(row).eq('id', itemId);
+    } catch (err) {
+      console.error('Erro ao salvar venda no Supabase:', err);
+    }
+  }
+}
+
+export function registrarVenda(
+  itemId: number,
+  qtdAVender: number,
+  dataVenda?: string
+): void {
+  registrarVendaAsync(itemId, qtdAVender, dataVenda).then();
 }
 
 export function calculateResumoFinanceiro(items: ItemVenda[]): ResumoFinanceiro {
@@ -317,13 +301,7 @@ export function calculateResumoFinanceiro(items: ItemVenda[]): ResumoFinanceiro 
 /* --- Autenticação & PIN --- */
 
 export function getAdminPin(): string {
-  if (!isBrowser()) return DEFAULT_PIN;
-  return localStorage.getItem(STORAGE_KEY_PIN) || DEFAULT_PIN;
-}
-
-export function setAdminPin(newPin: string): void {
-  if (!isBrowser()) return;
-  localStorage.setItem(STORAGE_KEY_PIN, newPin);
+  return process.env.NEXT_PUBLIC_ADMIN_PIN || DEFAULT_PIN;
 }
 
 export function isAdminAuthenticated(): boolean {

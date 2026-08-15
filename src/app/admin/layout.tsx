@@ -71,12 +71,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     setPinInput(e.target.value);
                     if (loginError) setLoginError(false);
                   }}
-                  placeholder="PIN Administrador (1234)"
+                  placeholder="Digite a senha / PIN..."
                   className="w-full bg-neutral-950 border border-neutral-800 focus:border-[#D4AF37] rounded-xl px-4 py-3 text-center tracking-widest text-lg font-mono placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/20"
                 />
               </div>
               {loginError && (
-                <p className="text-xs text-rose-400 mt-2">Senha incorreta. Tente "1234".</p>
+                <p className="text-xs text-rose-400 mt-2">Senha incorreta. Tente novamente.</p>
               )}
             </div>
 

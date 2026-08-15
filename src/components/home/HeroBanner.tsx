@@ -6,26 +6,26 @@ import { WhatsAppButton } from '@/components/common/WhatsAppButton';
 
 export const HeroBanner: React.FC = () => {
   return (
-    <section className="relative bg-[#F5F5F5] text-neutral-900 overflow-hidden py-16 sm:py-20 lg:py-24 border-b border-neutral-100">
+    <section className="relative bg-neutral-950 text-white overflow-hidden py-16 sm:py-20 lg:py-24 border-b border-neutral-900">
       {/* Background Decorativo e Blur Dourado Sutil */}
-      <div className="absolute top-1/4 left-10 w-96 h-96 bg-[#D4AF37]/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-80 h-80 bg-[#C5A059]/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-10 w-96 h-96 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-80 h-80 bg-[#C5A059]/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Lado Esquerdo: Mensagem de Boas-Vindas & CTA */}
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FBF8EE] border border-[#E6C875]/40 text-xs font-semibold text-[#B8962E]">
-              <Sparkles className="w-4 h-4 text-[#B8962E]" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-xs font-semibold text-[#D4AF37]">
+              <Sparkles className="w-4 h-4 text-[#D4AF37]" />
               <span>Coleção Exclusiva de Semijoias</span>
             </div>
 
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-neutral-900 leading-tight">
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
               Elegância e Sofisticação em Dourado e Prata
             </h1>
 
-            <p className="text-neutral-600 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              Conheça nosso catálogo exclusivo de brincos, colares, pulseiras, anéis, tornozeleiras e conjuntos. Peças de alta qualidade com acabamento impecável para elevar a sua elegância.
+            <p className="text-neutral-400 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto lg:mx-0">
+              Conheça nosso catálogo exclusivo de brincos, colares, pulseiras, anéis, tornozeleiras, relógios, piercings e conjuntos. Peças de alta qualidade em semijoias e aço inox com acabamento impecável para elevar a sua elegância.
             </p>
 
             {/* Ações / CTAs */}
@@ -41,14 +41,14 @@ export const HeroBanner: React.FC = () => {
               <WhatsAppButton
                 variant="outline"
                 label="Atendimento Personalizado"
-                className="w-full sm:w-auto text-neutral-900 border-neutral-300 hover:border-[#D4AF37] hover:bg-[#FBF8EE]"
+                className="w-full sm:w-auto text-white border-neutral-800 hover:border-[#D4AF37] hover:bg-[#D4AF37]/10"
               />
             </div>
           </div>
 
           {/* Lado Direito: Imagem Principal de Destaque */}
           <div className="lg:col-span-5 relative">
-            <div className="relative w-full aspect-[4/5] rounded-2xl overflow-hidden border border-neutral-200 shadow-xl group">
+            <div className="relative w-full aspect-[4/5] rounded-2xl overflow-hidden border border-neutral-900 shadow-xl group">
               <Image
                 src="/images/hero-banner.png"
                 alt="Semijoia Fina Aurum Co"

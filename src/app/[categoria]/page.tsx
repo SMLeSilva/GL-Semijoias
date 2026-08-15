@@ -4,9 +4,9 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getCategoryBySlug, categories } from '@/data/categories';
 import { getProductsByCategory } from '@/data/products';
-import { ProductCard } from '@/components/catalog/ProductCard';
+import { CategoryProductGrid } from '@/components/catalog/CategoryProductGrid';
 import { WhatsAppButton } from '@/components/common/WhatsAppButton';
-import { ChevronRight, ArrowLeft, ShieldCheck, Sparkles, Gem } from 'lucide-react';
+import { ChevronRight, ArrowLeft, Gem, Sparkles, ShieldCheck } from 'lucide-react';
 
 interface PageProps {
   params: Promise<{
@@ -14,7 +14,7 @@ interface PageProps {
   }>;
 }
 
-// Gerar rotas estáticas para todas as 6 categorias para alta performance
+// Gerar rotas estáticas para todas as categorias para alta performance
 export async function generateStaticParams() {
   return categories.map((cat) => ({
     categoria: cat.slug,
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: category.seoTitle,
     description: category.seoDescription,
     openGraph: {
-      title: `${category.name} | Catálogo de Semijoias Finas AURUM & CO.`,
+      title: `${category.name} | Catálogo de Semijoias Finas & Aço Inox`,
       description: category.seoDescription,
       images: [
         {
@@ -57,62 +57,54 @@ export default async function CategoryPage({ params }: PageProps) {
   }
 
   const productsList = getProductsByCategory(categoria);
+  const semijoiasCount = productsList.filter((p) => p.material !== 'inox').length;
+  const inoxCount = productsList.filter((p) => p.material === 'inox').length;
 
   return (
-    <div className="bg-neutral-50 min-h-screen py-10">
+    <div className="bg-black min-h-screen py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb / Navegação Hierárquica */}
         <nav className="flex items-center gap-2 text-xs text-neutral-500 mb-6">
-          <Link href="/" className="hover:text-[#B8962E] transition-colors flex items-center gap-1">
+          <Link href="/" className="hover:text-[#D4AF37] transition-colors flex items-center gap-1">
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Início</span>
           </Link>
-          <ChevronRight className="w-3 h-3 text-neutral-400" />
-          <span className="text-neutral-900 font-medium">Catálogo de {category.name}</span>
+          <ChevronRight className="w-3 h-3 text-neutral-500" />
+          <span className="text-neutral-100 font-medium">Catálogo de {category.name}</span>
         </nav>
 
         {/* Topo da Categoria (Header Banner) */}
-        <div className="bg-white rounded-2xl p-6 sm:p-10 border border-neutral-100 shadow-sm mb-10 relative overflow-hidden">
+        <div className="bg-neutral-950 rounded-2xl p-6 sm:p-10 border border-neutral-900 shadow-sm mb-10 relative overflow-hidden">
           <div className="relative z-10 max-w-3xl">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider text-[#B8962E] bg-[#FBF8EE] border border-[#E6C875]/40 mb-3">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/20 mb-3">
               <Gem className="w-3.5 h-3.5" />
               <span>Coleção Exclusiva</span>
             </div>
 
-            <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900 tracking-tight">
+            <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">
               Catálogo de {category.name}
             </h1>
 
-            <p className="mt-4 text-neutral-600 text-sm sm:text-base leading-relaxed">
+            <p className="mt-4 text-neutral-400 text-sm sm:text-base leading-relaxed">
               {category.description}
             </p>
 
-            <div className="mt-6 flex flex-wrap items-center gap-6 text-xs text-neutral-500 pt-4 border-t border-neutral-100">
-              <span className="font-semibold text-[#B8962E]">
-                {productsList.length} Peças Disponíveis
+            <div className="mt-6 flex flex-wrap items-center gap-4 sm:gap-6 text-xs text-neutral-400 pt-4 border-t border-neutral-900">
+              <span className="font-semibold text-white">
+                {productsList.length} Peças no Total
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-[#D4AF37] bg-[#D4AF37]/10 px-2.5 py-1 rounded-lg border border-[#D4AF37]/20">
+                <Sparkles className="w-3 h-3" /> {semijoiasCount} Semijoias
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/20">
+                <ShieldCheck className="w-3 h-3" /> {inoxCount} em Aço Inox
               </span>
             </div>
           </div>
         </div>
 
-        {/* Listagem dos Produtos da Categoria */}
-        {productsList.length > 0 ? (
-          <div className="space-y-6">
-            {productsList.map((product, idx) => (
-              <ProductCard key={product.id} product={product} priorityImage={idx < 2} />
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl p-12 text-center border border-neutral-100 shadow-sm space-y-4">
-            <p className="text-neutral-500 font-medium text-base">
-              Novas peças em breve nesta categoria!
-            </p>
-            <p className="text-neutral-400 text-xs max-w-md mx-auto">
-              Entre em contato conosco pelo WhatsApp para solicitar peças sob encomenda ou ver fotos de itens recém-chegados no estoque.
-            </p>
-            <WhatsAppButton categoryName={category.name} label="Consultar Peças em Estoque" />
-          </div>
-        )}
+        {/* Grid de Produtos com Abas e Divisões Organizadas */}
+        <CategoryProductGrid category={category} products={productsList} />
 
         {/* Rodapé da Categoria com CTA para WhatsApp */}
         <div className="mt-16 bg-neutral-900 text-white rounded-2xl p-8 text-center space-y-4 border border-neutral-800 shadow-lg">

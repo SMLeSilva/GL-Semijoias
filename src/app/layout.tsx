@@ -19,7 +19,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const viewport: Viewport = {
-  themeColor: '#FFFFFF',
+  themeColor: '#000000',
   width: 'device-width',
   initialScale: 1,
 };
@@ -30,16 +30,20 @@ export const metadata: Metadata = {
     template: '%s | GL Semijoias Finas',
   },
   description:
-    'Catálogo online de semijoias finas. Brincos, colares, pulseiras, anéis, tornozeleiras e conjuntos banhados a ouro 18k com acabamento de alta joalheria e tecnologia hipoalergênica.',
+    'Catálogo online de semijoias finas e peças em aço inox. Brincos, colares, pulseiras, anéis, tornozeleiras, relógios, piercings e conjuntos banhados a ouro 18k e aço cirúrgico 316L.',
   keywords: [
     'semijoias',
     'catálogo de semijoias',
     'semijoias banhadas a ouro 18k',
-    'brincos banhados',
+    'peças em aço inox',
+    'aço cirúrgico 316L',
+    'brincos banhados e inox',
     'colares femininos',
     'pulseiras riviera',
     'anéis solitários',
     'tornozeleiras delicadas',
+    'relógios femininos',
+    'piercings de pressão',
     'conjuntos de semijoias',
     'semijoias hipoalergênicas',
   ],
@@ -74,7 +78,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" data-scroll-behavior="smooth" className={`${cormorant.variable} ${plusJakarta.variable} scroll-smooth`}>
-      <body className="flex flex-col min-h-screen bg-white text-neutral-900 antialiased selection:bg-[#D4AF37] selection:text-white">
+      <body className="flex flex-col min-h-screen bg-black text-neutral-100 antialiased selection:bg-[#D4AF37] selection:text-black">
         <PublicLayoutShell>{children}</PublicLayoutShell>
       </body>
     </html>
