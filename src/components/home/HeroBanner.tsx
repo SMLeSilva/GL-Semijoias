@@ -25,7 +25,7 @@ export const HeroBanner: React.FC = () => {
             </h1>
 
             <p className="text-neutral-400 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              Conheça nosso catálogo exclusivo de brincos, colares, pulseiras, anéis, tornozeleiras, relógios, piercings e conjuntos. Peças de alta qualidade em semijoias e aço inox com acabamento impecável para elevar a sua elegância.
+              Conheça nosso catálogo exclusivo de brincos, colares, pulseiras, anéis e relógios. Peças de alta qualidade em semijoias e aço inox com acabamento impecável para elevar a sua elegância.
             </p>
 
             {/* Ações / CTAs */}

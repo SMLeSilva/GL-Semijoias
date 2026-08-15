@@ -27,7 +27,7 @@ export default function HomePage() {
             </h2>
 
             <p className="text-neutral-400 text-sm sm:text-base leading-relaxed">
-              Navegue pelas nossas 8 categorias exclusivas com opções em semijoias banhadas a ouro e peças em aço inox.
+              Navegue pelas nossas 5 categorias exclusivas com opções em semijoias banhadas a ouro e peças em aço inox.
             </p>
 
             <div className="pt-2 flex justify-center">
